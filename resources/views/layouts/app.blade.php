@@ -87,15 +87,16 @@
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <div id="app" class="min-h-screen">
         <!-- Navigation -->
-        @auth
-            @if(auth()->user()->isAdmin())
-                @include('components.navbar-admin')
-            @else
-                @include('components.navbar-peserta')
-            @endif
+        @if(request()->routeIs('admin.*'))
+            {{-- Hanya tampilkan navbar admin untuk route admin --}}
+            @include('components.navbar-admin')
+        @elseif(request()->routeIs('peserta.*'))
+            {{-- Hanya tampilkan navbar peserta untuk route peserta --}}
+            @include('components.navbar-peserta')
         @else
+            {{-- Untuk semua route lainnya (termasuk landing page), gunakan navbar guest --}}
             @include('components.navbar-guest')
-        @endauth
+        @endif
 
         <!-- Page Content -->
         <main class="animate-fade-in">
@@ -168,7 +169,7 @@
     @endif
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.12.0/cdn.min.js" defer></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.3.0/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

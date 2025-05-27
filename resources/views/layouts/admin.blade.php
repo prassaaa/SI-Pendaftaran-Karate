@@ -244,12 +244,19 @@
         </div>
     @endif
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.12.0/cdn.min.js" defer></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Global JavaScript for Admin -->
     <script>
+        // Pastikan Alpine.js dimuat dengan benar
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine.js initialized successfully');
+        });
+
         // CSRF Token setup
         window.Laravel = {
             csrfToken: '{{ csrf_token() }}'
@@ -479,8 +486,17 @@
 
         // Initialize tooltips (if using)
         document.addEventListener('DOMContentLoaded', function() {
-            // Add any initialization code here
             console.log('Admin panel loaded');
+
+            // Debug Alpine.js
+            setTimeout(() => {
+                const navElement = document.querySelector('nav[x-data]');
+                if (navElement && navElement._x_dataStack) {
+                    console.log('Alpine.js working correctly');
+                } else {
+                    console.error('Alpine.js not working properly');
+                }
+            }, 1000);
         });
 
         // Search functionality
