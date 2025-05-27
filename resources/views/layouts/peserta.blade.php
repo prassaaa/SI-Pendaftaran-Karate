@@ -94,6 +94,31 @@
         .badge-gray {
             @apply badge bg-gray-100 text-gray-800;
         }
+
+        /* Admin button compatibility */
+        .admin-btn {
+            @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+        }
+
+        .admin-btn-primary {
+            @apply admin-btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+        }
+
+        .admin-btn-secondary {
+            @apply admin-btn bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+        }
+
+        .admin-btn-success {
+            @apply admin-btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+        }
+
+        .admin-btn-danger {
+            @apply admin-btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+        }
+
+        .admin-btn-warning {
+            @apply admin-btn bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500;
+        }
     </style>
 
     @stack('styles')
@@ -103,22 +128,27 @@
         <!-- Peserta Navbar -->
         @include('components.navbar-peserta')
 
-        <!-- Main Content Area -->
-        <main class="py-6">
-            <!-- Page Header -->
-            @isset($header)
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    {{ $header }}
-                </div>
-            </div>
-            @endisset
+        <!-- TAMBAHAN INI: Include Peserta Sidebar -->
+        @include('components.sidebar-peserta')
 
-            <!-- Page Content -->
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                @yield('content')
-            </div>
-        </main>
+        <!-- Main Content Area DENGAN MARGIN untuk sidebar -->
+        <div class="lg:ml-72"> <!-- Tambahan margin left -->
+            <main class="py-6">
+                <!-- Page Header -->
+                @isset($header)
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        {{ $header }}
+                    </div>
+                </div>
+                @endisset
+
+                <!-- Page Content -->
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    @yield('content')
+                </div>
+            </main>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -180,16 +210,46 @@
         </div>
     @endif
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.12.0/cdn.min.js" defer></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Global JavaScript for Peserta -->
     <script>
+        // Pastikan Alpine.js dimuat dengan benar
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine.js initialized successfully for peserta');
+        });
+
         // CSRF Token setup
         window.Laravel = {
             csrfToken: '{{ csrf_token() }}'
         };
+
+        // Debug - cek sidebar ada atau tidak
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Peserta panel loaded');
+
+            // Check if sidebar exists
+            const sidebar = document.querySelector('[x-data*="sidebarOpen"]');
+            if (sidebar) {
+                console.log('✅ Sidebar found in DOM');
+            } else {
+                console.error('❌ Sidebar not found in DOM');
+            }
+
+            // Debug Alpine.js
+            setTimeout(() => {
+                const sidebarElement = document.querySelector('[x-data*="sidebarOpen"]');
+                if (sidebarElement && sidebarElement._x_dataStack) {
+                    console.log('✅ Alpine.js working correctly on sidebar');
+                } else {
+                    console.error('❌ Alpine.js not working properly on sidebar');
+                }
+            }, 1000);
+        });
 
         // Global loading functions
         window.showLoading = function() {
@@ -245,42 +305,22 @@
             }, 4000);
         };
 
-        // Confirm deletion function
-        window.confirmDelete = function(url, message = 'Apakah Anda yakin ingin menghapus data ini?') {
-            Swal.fire({
-                title: 'Konfirmasi Hapus',
-                text: message,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#EF4444',
-                cancelButtonColor: '#6B7280',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    showLoading();
-
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = url;
-
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = window.Laravel.csrfToken;
-
-                    const methodField = document.createElement('input');
-                    methodField.type = 'hidden';
-                    methodField.name = '_method';
-                    methodField.value = 'DELETE';
-
-                    form.appendChild(csrfToken);
-                    form.appendChild(methodField);
-
-                    document.body.appendChild(form);
-                    form.submit();
+        // Mark all notifications as read
+        window.markAllAsRead = function() {
+            fetch('{{ route("peserta.notifications.read-all") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
                 }
-            });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
         };
 
         // Auto-refresh notifications
@@ -289,7 +329,6 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.unread > 0) {
-                        // Update notification badge
                         const badge = document.querySelector('.notification-badge');
                         if (badge) {
                             badge.textContent = data.unread;
