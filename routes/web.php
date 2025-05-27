@@ -133,7 +133,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/peserta-excel', [ExportController::class, 'pesertaExcel'])->name('peserta.excel');
         Route::get('/peserta-pdf', [ExportController::class, 'pesertaPdf'])->name('peserta.pdf');
         Route::get('/pembayaran-excel', [ExportController::class, 'pembayaranExcel'])->name('pembayaran.excel');
-        Route::get('/laporan-keuangan', [ExportController::class, 'laporanKeuangan'])->name('laporan.keuangan');
+        Route::get('/laporan-keuangan', [ExportController::class, 'laporanKeuangan'])->name('laporan-keuangan');
         Route::get('/daftar-hadir', [ExportController::class, 'daftarHadir'])->name('daftar.hadir');
         Route::get('/sertifikat/{id}', [ExportController::class, 'sertifikatPeserta'])->name('sertifikat');
     });
