@@ -242,13 +242,13 @@
                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
                                 <span class="text-sm text-gray-700">
                                     Saya menyetujui
-                                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium" @click="showTerms = true">
+                                    <button type="button" onclick="openTermsModal()" class="text-blue-600 hover:text-blue-800 font-medium underline">
                                         Syarat dan Ketentuan
-                                    </a>
+                                    </button>
                                     serta
-                                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium" @click="showPrivacy = true">
+                                    <button type="button" onclick="openPrivacyModal()" class="text-blue-600 hover:text-blue-800 font-medium underline">
                                         Kebijakan Privasi
-                                    </a>
+                                    </button>
                                     dalam mengikuti kejuaraan ini.
                                 </span>
                             </label>
@@ -312,20 +312,14 @@
             </div>
         </div>
 
-        <!-- Terms Modal -->
-        <div x-show="showTerms"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <!-- Terms Modal - Pure JavaScript -->
+        <div id="termsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                 <div class="mt-3">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Syarat dan Ketentuan</h3>
-                        <button @click="showTerms = false" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
+                        <button onclick="closeTermsModal()" type="button" class="text-gray-400 hover:text-gray-600">
+                            <span class="text-2xl">&times;</span>
                         </button>
                     </div>
                     <div class="mt-2 px-7 py-3 max-h-96 overflow-y-auto text-sm text-gray-600">
@@ -343,7 +337,7 @@
                         </ol>
                     </div>
                     <div class="items-center px-4 py-3">
-                        <button @click="showTerms = false" class="admin-btn-primary w-full">
+                        <button onclick="closeTermsModal()" type="button" class="admin-btn-primary w-full">
                             Saya Mengerti
                         </button>
                     </div>
@@ -351,20 +345,14 @@
             </div>
         </div>
 
-        <!-- Privacy Modal -->
-        <div x-show="showPrivacy"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <!-- Privacy Modal - Pure JavaScript -->
+        <div id="privacyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
             <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
                 <div class="mt-3">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Kebijakan Privasi</h3>
-                        <button @click="showPrivacy = false" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
+                        <button onclick="closePrivacyModal()" type="button" class="text-gray-400 hover:text-gray-600">
+                            <span class="text-2xl">&times;</span>
                         </button>
                     </div>
                     <div class="mt-2 px-7 py-3 max-h-96 overflow-y-auto text-sm text-gray-600">
@@ -392,7 +380,7 @@
                         </div>
                     </div>
                     <div class="items-center px-4 py-3">
-                        <button @click="showPrivacy = false" class="admin-btn-primary w-full">
+                        <button onclick="closePrivacyModal()" type="button" class="admin-btn-primary w-full">
                             Saya Mengerti
                         </button>
                     </div>
@@ -408,8 +396,6 @@
     function accountForm() {
         return {
             showPassword: false,
-            showTerms: false,
-            showPrivacy: false,
 
             submitForm() {
                 // Show confirmation
@@ -424,7 +410,9 @@
                     cancelButtonText: 'Periksa Lagi'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        showLoading();
+                        if (typeof showLoading === 'function') {
+                            showLoading();
+                        }
                         // Form will submit naturally
                     }
                 });
@@ -432,20 +420,100 @@
         }
     }
 
-    // Validate email format
-    document.getElementById('email').addEventListener('blur', function() {
-        const email = this.value;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (email && !emailRegex.test(email)) {
-            showToast('Format email tidak valid', 'error');
-        }
-    });
+    // Pure JavaScript Modal Functions
+    function openTermsModal() {
+        document.getElementById('termsModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
 
-    // Password strength indicator
-    document.getElementById('password').addEventListener('input', function() {
-        const password = this.value;
-        const strength = calculatePasswordStrength(password);
-        // You can add visual indicator here
+    function closeTermsModal() {
+        document.getElementById('termsModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function openPrivacyModal() {
+        document.getElementById('privacyModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePrivacyModal() {
+        document.getElementById('privacyModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+        // Terms modal outside click
+        document.getElementById('termsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTermsModal();
+            }
+        });
+
+        // Privacy modal outside click
+        document.getElementById('privacyModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePrivacyModal();
+            }
+        });
+
+        // Escape key handler
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTermsModal();
+                closePrivacyModal();
+            }
+        });
+
+        // Email validation
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.addEventListener('blur', function() {
+                const email = this.value;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (email && !emailRegex.test(email)) {
+                    if (typeof showToast === 'function') {
+                        showToast('Format email tidak valid', 'error');
+                    } else {
+                        alert('Format email tidak valid');
+                    }
+                }
+            });
+        }
+
+        // Password strength indicator
+        const passwordInput = document.getElementById('password');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const strength = calculatePasswordStrength(password);
+                // You can add visual indicator here if needed
+            });
+        }
+
+        // Auto-save form data (except password for security)
+        const formInputs = document.querySelectorAll('input[name="email"]');
+        formInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                localStorage.setItem('pendaftaran_step4_' + this.name, this.value);
+            });
+
+            // Load saved data
+            const saved = localStorage.getItem('pendaftaran_step4_' + input.name);
+            if (saved && !input.value) {
+                input.value = saved;
+            }
+        });
+
+        // Clear localStorage on successful submission
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                setTimeout(() => {
+                    localStorage.removeItem('pendaftaran_step4_email');
+                }, 1000);
+            });
+        }
     });
 
     function calculatePasswordStrength(password) {
@@ -458,25 +526,7 @@
         return strength;
     }
 
-    // Auto-save form data
-    const formInputs = document.querySelectorAll('input');
-    formInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            localStorage.setItem('pendaftaran_step4_' + this.name, this.value);
-        });
-
-        // Load saved data
-        const saved = localStorage.getItem('pendaftaran_step4_' + input.name);
-        if (saved && !input.value) {
-            input.value = saved;
-        }
-    });
-
-    // Clear localStorage on successful submission
-    document.querySelector('form').addEventListener('submit', function() {
-        setTimeout(() => {
-            localStorage.clear();
-        }, 1000);
-    });
+    // Debug logging
+    console.log('Step 4 JavaScript loaded successfully');
 </script>
 @endpush

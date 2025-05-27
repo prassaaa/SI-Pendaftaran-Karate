@@ -64,11 +64,17 @@ class PendaftaranController extends Controller
         }
 
         $validated = $request->validate([
-            'kumite_perorangan' => 'boolean',
-            'kata_perorangan' => 'boolean',
-            'kata_beregu' => 'boolean',
-            'kumite_beregu' => 'boolean',
+            'kumite_perorangan' => 'nullable|boolean',
+            'kata_perorangan' => 'nullable|boolean',
+            'kata_beregu' => 'nullable|boolean',
+            'kumite_beregu' => 'nullable|boolean',
         ]);
+
+        // Set default values for unchecked checkboxes
+        $validated['kumite_perorangan'] = $validated['kumite_perorangan'] ?? false;
+        $validated['kata_perorangan'] = $validated['kata_perorangan'] ?? false;
+        $validated['kata_beregu'] = $validated['kata_beregu'] ?? false;
+        $validated['kumite_beregu'] = $validated['kumite_beregu'] ?? false;
 
         // Minimal satu kategori harus dipilih
         if (!array_filter($validated)) {
@@ -110,15 +116,22 @@ class PendaftaranController extends Controller
             'foto' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // Upload foto
+        $step3_data = [];
+
+        // Upload foto dan simpan path-nya
         if ($request->hasFile('foto')) {
             $foto = $request->file('foto');
             $filename = time() . '_' . $foto->getClientOriginalName();
             $path = $foto->storeAs('uploads/fotos', $filename, 'public');
-            $validated['foto_path'] = $path;
+
+            // Simpan hanya path file, bukan object UploadedFile
+            $step3_data['foto_path'] = $path;
+            $step3_data['foto_name'] = $filename;
+            $step3_data['foto_original_name'] = $foto->getClientOriginalName();
+            $step3_data['foto_size'] = $foto->getSize();
         }
 
-        session(['step3_data' => $validated]);
+        session(['step3_data' => $step3_data]);
 
         return redirect()->route('pendaftaran.step4');
     }
