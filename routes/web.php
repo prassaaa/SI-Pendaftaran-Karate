@@ -155,7 +155,7 @@ Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->name('peserta.')
     Route::get('/profile', [PesertaProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [PesertaProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/upload-foto', [PesertaProfileController::class, 'uploadFoto'])->name('profile.upload-foto');
-    Route::put('/profile/password', [PesertaProfileController::class, 'changePassword'])->name('profile.change-password');
+    Route::put('/profile/password', [PesertaProfileController::class, 'changePassword'])->name('profile.update-password');
     Route::put('/profile/email', [PesertaProfileController::class, 'updateEmail'])->name('profile.update-email');
     Route::delete('/profile/delete-account', [PesertaProfileController::class, 'deleteAccount'])->name('profile.delete-account');
     Route::get('/profile/download-data', [PesertaProfileController::class, 'downloadData'])->name('profile.download-data');

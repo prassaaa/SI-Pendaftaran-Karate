@@ -3,8 +3,14 @@
      class="bg-white shadow-sm border-b border-gray-200 fixed w-full z-50 top-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <!-- Logo -->
             <div class="flex items-center">
+                <button @click="$dispatch('toggle-sidebar')"
+                        class="lg:hidden text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 mr-3">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+
                 <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                         <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -18,10 +24,8 @@
                 </div>
             </div>
 
-            <!-- Right side -->
             <div class="flex items-center space-x-4">
 
-                <!-- Notifications -->
                 <div class="relative" x-data="{ count: {{ auth()->user()->notifications()->unread()->count() }} }">
                     <button @click="notifOpen = !notifOpen; profileOpen = false;"
                             class="relative p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors duration-200">
@@ -34,7 +38,6 @@
                               class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                     </button>
 
-                    <!-- Notifications Dropdown -->
                     <div x-show="notifOpen"
                          @click.outside="notifOpen = false"
                          x-transition:enter="transition ease-out duration-200"
@@ -52,8 +55,8 @@
                             <div class="p-4 border-b border-gray-100 hover:bg-gray-50 {{ $notification->read_at ? '' : 'bg-blue-50' }}">
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
-                                        <h4 class="text-sm font-medium text-gray-900">{{ $notification->title }}</h4>
-                                        <p class="text-sm text-gray-600 mt-1">{{ $notification->message }}</p>
+                                        <h4 class="text-sm font-medium text-gray-900">{{ $notification->data['title'] ?? 'Notifikasi Baru' }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">{{ $notification->data['message'] ?? 'Anda memiliki notifikasi baru.' }}</p>
                                         <p class="text-xs text-gray-400 mt-2">{{ $notification->created_at->diffForHumans() }}</p>
                                     </div>
                                     @if(!$notification->read_at)
@@ -70,15 +73,18 @@
                             </div>
                             @endforelse
                         </div>
-                        @if(auth()->user()->notifications()->count() > 0)
-                        <div class="p-4 bg-gray-50">
-                            <button onclick="markAllAsRead()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Tandai semua dibaca</button>
+                        @if(auth()->user()->notifications()->unread()->count() > 0)
+                        <div class="p-4 bg-gray-50 border-t border-gray-200">
+                            <button onclick="markAllAsRead()" class="w-full text-sm text-blue-600 hover:text-blue-800 font-medium focus:outline-none">Tandai semua dibaca</button>
+                        </div>
+                        @elseif(auth()->user()->notifications()->count() > 0)
+                         <div class="p-4 bg-gray-50 border-t border-gray-200">
+                            <a href="#" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Lihat semua notifikasi</a> {{-- Ganti # dengan route yang benar jika ada halaman semua notifikasi --}}
                         </div>
                         @endif
                     </div>
                 </div>
 
-                <!-- Profile Dropdown -->
                 <div class="relative">
                     <button @click="profileOpen = !profileOpen; notifOpen = false;"
                             class="flex items-center space-x-3 text-sm focus:outline-none">
@@ -100,7 +106,6 @@
                         </svg>
                     </button>
 
-                    <!-- Profile Dropdown Menu -->
                     <div x-show="profileOpen"
                          @click.outside="profileOpen = false"
                          x-transition:enter="transition ease-out duration-200"
@@ -165,7 +170,6 @@
     </div>
 </nav>
 
-<!-- Spacer for fixed navbar -->
 <div class="h-16"></div>
 
 <script>
@@ -180,9 +184,20 @@ function markAllAsRead() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Update UI directly or reload
+            document.querySelector('[x-data="{ count: {{ auth()->user()->notifications()->unread()->count() }} }"]')._x_dataStack[0].count = 0;
+            document.querySelectorAll('.p-4.border-b.border-gray-100.hover\\:bg-gray-50.bg-blue-50').forEach(el => el.classList.remove('bg-blue-50'));
+            document.querySelectorAll('.w-2.h-2.bg-blue-500.rounded-full').forEach(el => el.style.display = 'none');
+             // Optionally reload if more complex UI updates are needed:
+             // location.reload();
+             showToast('Semua notifikasi ditandai terbaca.', 'success'); // Menggunakan global showToast
+        } else {
+            showToast('Gagal menandai notifikasi.', 'error');
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Terjadi kesalahan.', 'error');
+    });
 }
 </script>

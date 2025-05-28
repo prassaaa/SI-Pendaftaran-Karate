@@ -7,17 +7,13 @@
 
     <title>{{ $title ?? 'Admin' }} - {{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
 
-    <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Additional CSS for Admin -->
     <style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Inter', sans-serif; }
@@ -159,16 +155,13 @@
 </head>
 <body class="font-sans antialiased bg-gray-50">
     <div id="admin-app" class="min-h-screen">
-        <!-- Admin Navbar -->
         @include('components.navbar-admin')
 
-        <!-- Admin Sidebar -->
         @include('components.sidebar-admin')
 
-        <!-- Main Content Area -->
-        <div class="lg:ml-64">
+        {{-- PENYESUAIAN: Mengubah lg:ml-64 menjadi lg:ml-72 --}}
+        <div class="lg:ml-72">
             <main class="py-6">
-                <!-- Page Header -->
                 @isset($header)
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -177,7 +170,6 @@
                 </div>
                 @endisset
 
-                <!-- Page Content -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     @yield('content')
                 </div>
@@ -185,7 +177,6 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-xl">
             <div class="flex items-center space-x-3">
@@ -195,10 +186,8 @@
         </div>
     </div>
 
-    <!-- Toast Notifications -->
     <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
 
-    <!-- Success/Error Flash Messages -->
     @if(session('success'))
         <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)"
              class="fixed top-20 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg">
@@ -244,13 +233,10 @@
         </div>
     @endif
 
-    <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Global JavaScript for Admin -->
     <script>
         // Pastikan Alpine.js dimuat dengan benar
         document.addEventListener('alpine:init', () => {
@@ -452,8 +438,13 @@
 
         // Auto-refresh stats
         function refreshStats() {
-            fetch('/admin/api/stats')
-                .then(response => response.json())
+            fetch('/admin/api/stats') // Pastikan URL API ini benar
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     // Update navbar stats
                     document.querySelectorAll('[data-stat]').forEach(el => {
@@ -463,11 +454,15 @@
                         }
                     });
                 })
-                .catch(error => console.log('Stats refresh failed:', error));
+                .catch(error => console.warn('Stats refresh failed:', error)); // Use warn for non-critical periodic failures
         }
 
-        // Refresh stats every 30 seconds
-        setInterval(refreshStats, 30000);
+        // Refresh stats every 30 seconds, only if on admin dashboard page.
+        if (window.location.pathname.includes('/admin/dashboard')) {
+             setInterval(refreshStats, 30000);
+             refreshStats(); // Initial call
+        }
+
 
         // Table utilities
         window.toggleSelectAll = function(checkbox) {
@@ -480,21 +475,29 @@
             const checked = document.querySelectorAll('input[name="selected_items[]"]:checked');
             const bulkButton = document.getElementById('bulk-action-button');
             if (bulkButton) {
-                bulkButton.style.display = checked.length > 0 ? 'block' : 'none';
+                bulkButton.style.display = checked.length > 0 ? 'inline-flex' : 'none'; // use inline-flex for buttons
             }
         };
+        // Call on page load if checkboxes are present
+        if (document.querySelectorAll('input[name="selected_items[]"]').length > 0) {
+            updateBulkActionButton();
+             document.querySelectorAll('input[name="selected_items[]"]').forEach(cb => {
+                cb.addEventListener('change', updateBulkActionButton);
+            });
+        }
 
-        // Initialize tooltips (if using)
+
+        // Initialize tooltips (if using a library like Tippy.js or Bootstrap's)
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Admin panel loaded');
 
             // Debug Alpine.js
             setTimeout(() => {
                 const navElement = document.querySelector('nav[x-data]');
-                if (navElement && navElement._x_dataStack) {
-                    console.log('Alpine.js working correctly');
+                if (navElement && typeof navElement.__x !== 'undefined') { // Check for Alpine's internal property
+                    console.log('Alpine.js working correctly on admin layout.');
                 } else {
-                    console.error('Alpine.js not working properly');
+                    console.warn('Alpine.js might not be working properly on admin layout or nav has no x-data.');
                 }
             }, 1000);
         });
@@ -503,40 +506,35 @@
         window.searchTable = function(input, tableId) {
             const filter = input.value.toUpperCase();
             const table = document.getElementById(tableId);
-            const rows = table.getElementsByTagName('tr');
+            if (!table) return;
+            const rows = table.querySelectorAll('tbody tr'); // More specific to tbody rows
 
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
+            rows.forEach(row => {
                 const cells = row.getElementsByTagName('td');
                 let found = false;
-
                 for (let j = 0; j < cells.length; j++) {
                     const cell = cells[j];
-                    if (cell.textContent.toUpperCase().indexOf(filter) > -1) {
+                    if (cell && cell.textContent.toUpperCase().indexOf(filter) > -1) {
                         found = true;
                         break;
                     }
                 }
-
                 row.style.display = found ? '' : 'none';
-            }
+            });
         };
 
         // Export functionality
         window.exportData = function(format, url, filters = {}) {
             showLoading();
-
             const params = new URLSearchParams(filters);
-            const exportUrl = `${url}?${params.toString()}`;
+            const exportUrl = `${url}${url.includes('?') ? '&' : '?'}${params.toString()}&export_format=${format}`;
 
-            // Create temporary link to download
             const link = document.createElement('a');
             link.href = exportUrl;
-            link.download = '';
+            // link.download = ''; // Optional: specific filename can be set by server via Content-Disposition
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
             setTimeout(() => hideLoading(), 1000);
         };
     </script>
