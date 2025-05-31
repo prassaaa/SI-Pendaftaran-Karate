@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\BiayaKategori;
 
 class Peserta extends Model
 {
@@ -208,21 +209,30 @@ class Peserta extends Model
      */
     public function calculateTotalBiaya()
     {
-        $biaya = BiayaKategori::active()->first();
-        $total = 0;
+        try {
+            // Get active biaya kategori
+            $biaya = \App\Models\BiayaKategori::active()->first();
 
-        if (!$biaya) {
-            // Default biaya jika tidak ada setting
-            if ($this->kumite_perorangan) $total += 50000;
-            if ($this->kata_perorangan) $total += 40000;
-            if ($this->kata_beregu) $total += 75000;
-            if ($this->kumite_beregu) $total += 75000;
-        } else {
-            if ($this->kumite_perorangan) $total += $biaya->biaya_kumite;
-            if ($this->kata_perorangan) $total += $biaya->biaya_kata;
-            if ($this->kata_beregu) $total += $biaya->biaya_beregu;
-            if ($this->kumite_beregu) $total += $biaya->biaya_beregu;
+            if ($biaya) {
+                $total = 0;
+                if ($this->kumite_perorangan) $total += $biaya->biaya_kumite;
+                if ($this->kata_perorangan) $total += $biaya->biaya_kata;
+                if ($this->kata_beregu) $total += $biaya->biaya_beregu;
+                if ($this->kumite_beregu) $total += $biaya->biaya_beregu;
+
+                return $total;
+            }
+        } catch (\Exception $e) {
+            // Log error but continue with default calculation
+            \Log::warning('Error getting BiayaKategori: ' . $e->getMessage());
         }
+
+        // Default biaya jika tidak ada setting atau error
+        $total = 0;
+        if ($this->kumite_perorangan) $total += 50000;
+        if ($this->kata_perorangan) $total += 40000;
+        if ($this->kata_beregu) $total += 75000;
+        if ($this->kumite_beregu) $total += 75000;
 
         return $total;
     }

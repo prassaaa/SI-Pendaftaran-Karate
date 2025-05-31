@@ -56,4 +56,36 @@ class BiayaKategori extends Model
     {
         return 'Rp ' . number_format($this->biaya_beregu, 0, ',', '.');
     }
+
+    /**
+     * Check if this biaya is active
+     */
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Get status badge class
+     */
+    public function getStatusBadgeAttribute()
+    {
+        return match($this->status) {
+            'active' => 'bg-green-100 text-green-800',
+            'inactive' => 'bg-gray-100 text-gray-800',
+            default => 'bg-gray-100 text-gray-800'
+        };
+    }
+
+    /**
+     * Get status text
+     */
+    public function getStatusTextAttribute()
+    {
+        return match($this->status) {
+            'active' => 'Aktif',
+            'inactive' => 'Tidak Aktif',
+            default => 'Tidak Diketahui'
+        };
+    }
 }

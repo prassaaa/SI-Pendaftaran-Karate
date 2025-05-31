@@ -520,32 +520,6 @@
                     <textarea name="keterangan" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
                 </div>
 
-                <!-- Bank Info -->
-                <div class="mb-6 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
-                    <h4 class="font-bold text-yellow-900 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Informasi Rekening
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-white rounded-lg p-4 border border-yellow-300">
-                            <div class="font-semibold text-yellow-900">BCA</div>
-                            <div class="text-sm text-yellow-800 font-mono">1234567890</div>
-                            <div class="text-xs text-yellow-700">a.n. INKAI Kediri</div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-yellow-300">
-                            <div class="font-semibold text-yellow-900">Mandiri</div>
-                            <div class="text-sm text-yellow-800 font-mono">0987654321</div>
-                            <div class="text-xs text-yellow-700">a.n. INKAI Kediri</div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-yellow-300 md:col-span-2">
-                            <div class="font-semibold text-yellow-900">QRIS</div>
-                            <div class="text-sm text-yellow-800">Scan QR Code yang tersedia</div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Submit Button -->
                 <div class="flex space-x-4">
                     <button type="button" onclick="closePaymentModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
@@ -562,6 +536,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('css/upload-styles.css') }}">
 <style>
     .animate-slide-up {
         animation: slideUp 0.6s ease-out forwards;
@@ -680,6 +655,8 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/upload-bukti.js') }}"></script>
 <script>
     function showPaymentModal() {
         document.getElementById('paymentModal').classList.remove('hidden');

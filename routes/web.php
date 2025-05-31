@@ -136,6 +136,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/laporan-keuangan', [ExportController::class, 'laporanKeuangan'])->name('laporan-keuangan');
         Route::get('/daftar-hadir', [ExportController::class, 'daftarHadir'])->name('daftar.hadir');
         Route::get('/sertifikat/{id}', [ExportController::class, 'sertifikatPeserta'])->name('sertifikat');
+        Route::get('/pembayaran-detail/{id}', [ExportController::class, 'pembayaranDetail'])->name('pembayaran.detail');
     });
 });
 
@@ -166,6 +167,9 @@ Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->name('peserta.')
 
     // Payment Info API
     Route::get('/payment-info', [PesertaDashboardController::class, 'getPaymentInfo'])->name('payment-info');
+
+    // Payment Status Check
+    Route::get('/payment-status', [PesertaDashboardController::class, 'checkPaymentStatus'])->name('payment-status');
 });
 
 // Redirect Routes

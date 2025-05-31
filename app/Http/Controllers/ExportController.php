@@ -12,143 +12,128 @@ use PDF;
 
 class ExportController extends Controller
 {
-    public function pesertaExcel(Request $request)
+    public function pesertaExcel()
     {
-        $filename = 'Data_Peserta_' . date('Y-m-d_H-i-s') . '.xlsx';
+        try {
+            $peserta = Peserta::with(['ranting', 'kategoriUsia', 'user'])
+                             ->latest()
+                             ->get();
 
-        return Excel::download(new PesertaExport($request->all()), $filename);
+            return Excel::download(new PesertaExport($peserta), 'peserta_' . date('Y-m-d') . '.xlsx');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh data peserta: ' . $e->getMessage()]);
+        }
     }
 
-    public function pesertaPdf(Request $request)
+    public function pesertaPdf()
     {
-        $query = Peserta::with(['ranting', 'kategoriUsia']);
+        try {
+            $peserta = Peserta::with(['ranting', 'kategoriUsia'])
+                             ->approved()
+                             ->get();
 
-        // Apply filters (sama seperti di PesertaController)
-        if ($request->status_pendaftaran) {
-            $query->where('status_pendaftaran', $request->status_pendaftaran);
+            $pdf = Pdf::loadView('admin.exports.peserta-pdf', compact('peserta'));
+            $pdf->setPaper('a4', 'landscape');
+
+            return $pdf->download('daftar_peserta_' . date('Y-m-d') . '.pdf');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh PDF peserta: ' . $e->getMessage()]);
         }
-
-        if ($request->status_bayar) {
-            $query->where('status_bayar', $request->status_bayar);
-        }
-
-        if ($request->ranting_id) {
-            $query->where('ranting_id', $request->ranting_id);
-        }
-
-        $peserta = $query->get();
-
-        $pdf = PDF::loadView('exports.peserta-pdf', compact('peserta'));
-        $pdf->setPaper('a4', 'landscape');
-
-        $filename = 'Data_Peserta_' . date('Y-m-d_H-i-s') . '.pdf';
-
-        return $pdf->download($filename);
     }
 
-    public function pembayaranExcel(Request $request)
+    public function pembayaranExcel()
     {
-        $filename = 'Data_Pembayaran_' . date('Y-m-d_H-i-s') . '.xlsx';
+        try {
+            $pembayaran = Pembayaran::with(['peserta.ranting', 'peserta.kategoriUsia'])
+                                   ->latest()
+                                   ->get();
 
-        return Excel::download(new PembayaranExport($request->all()), $filename);
+            return Excel::download(new PembayaranExport($pembayaran), 'pembayaran_' . date('Y-m-d') . '.xlsx');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh data pembayaran: ' . $e->getMessage()]);
+        }
     }
 
     public function laporanKeuangan(Request $request)
     {
-        $startDate = $request->start_date ?? now()->startOfMonth()->format('Y-m-d');
-        $endDate = $request->end_date ?? now()->endOfMonth()->format('Y-m-d');
+        try {
+            $startDate = $request->get('start_date', now()->startOfMonth());
+            $endDate = $request->get('end_date', now()->endOfMonth());
 
-        // Data pembayaran dalam periode
-        $pembayaran = Pembayaran::with(['peserta.ranting'])
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->get();
+            $pembayaran = Pembayaran::with(['peserta'])
+                                   ->whereBetween('created_at', [$startDate, $endDate])
+                                   ->get();
 
-        // Statistik
-        $stats = [
-            'total_pendaftaran' => $pembayaran->count(),
-            'total_revenue' => $pembayaran->where('status_bayar', 'paid')->sum('jumlah_bayar'),
-            'pending_revenue' => $pembayaran->where('status_bayar', 'pending')->sum('jumlah_bayar'),
-            'failed_count' => $pembayaran->where('status_bayar', 'failed')->count(),
-        ];
+            $pdf = Pdf::loadView('admin.exports.laporan-keuangan', compact('pembayaran', 'startDate', 'endDate'));
+            $pdf->setPaper('a4', 'portrait');
 
-        // Group by metode pembayaran
-        $byMetode = $pembayaran->groupBy('metode_pembayaran')->map(function($group) {
-            return [
-                'count' => $group->count(),
-                'paid_count' => $group->where('status_bayar', 'paid')->count(),
-                'pending_count' => $group->where('status_bayar', 'pending')->count(),
-                'total_amount' => $group->where('status_bayar', 'paid')->sum('jumlah_bayar'),
-            ];
-        });
+            return $pdf->download('laporan_keuangan_' . date('Y-m-d') . '.pdf');
 
-        // Group by ranting
-        $byRanting = $pembayaran->groupBy('peserta.ranting.nama_ranting')->map(function($group) {
-            return [
-                'count' => $group->count(),
-                'total_amount' => $group->where('status_bayar', 'paid')->sum('jumlah_bayar'),
-            ];
-        });
-
-        $pdf = PDF::loadView('exports.laporan-keuangan', compact(
-            'pembayaran', 'stats', 'byMetode', 'byRanting', 'startDate', 'endDate'
-        ));
-
-        $filename = 'Laporan_Keuangan_' . $startDate . '_to_' . $endDate . '.pdf';
-
-        return $pdf->download($filename);
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh laporan keuangan: ' . $e->getMessage()]);
+        }
     }
 
     public function sertifikatPeserta($id)
     {
-        $peserta = Peserta::with(['ranting', 'kategoriUsia'])->findOrFail($id);
+        try {
+            $peserta = Peserta::with(['ranting', 'kategoriUsia'])
+                             ->findOrFail($id);
 
-        if ($peserta->status_pendaftaran !== 'approved' || $peserta->status_bayar !== 'paid') {
-            return back()->withErrors(['error' => 'Peserta belum memenuhi syarat untuk mencetak sertifikat']);
+            // Cek apakah peserta eligible untuk sertifikat
+            if ($peserta->status_pendaftaran !== 'approved' || $peserta->status_bayar !== 'paid') {
+                return back()->withErrors(['error' => 'Peserta belum memenuhi syarat untuk mendapatkan sertifikat']);
+            }
+
+            $pdf = Pdf::loadView('admin.exports.sertifikat', compact('peserta'));
+            $pdf->setPaper('a4', 'landscape');
+
+            $filename = "Sertifikat_{$peserta->nama_lengkap}_{$peserta->kode_pendaftaran}.pdf";
+
+            return $pdf->download($filename);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh sertifikat: ' . $e->getMessage()]);
         }
-
-        $pdf = PDF::loadView('exports.sertifikat', compact('peserta'));
-        $pdf->setPaper('a4', 'landscape');
-
-        $filename = 'Sertifikat_' . $peserta->kode_pendaftaran . '.pdf';
-
-        return $pdf->download($filename);
     }
 
-    public function daftarHadir(Request $request)
+    public function daftarHadir()
     {
-        $query = Peserta::with(['ranting', 'kategoriUsia'])
-            ->where('status_pendaftaran', 'approved')
-            ->where('status_bayar', 'paid');
+        try {
+            $peserta = Peserta::with(['ranting', 'kategoriUsia'])
+                             ->approved()
+                             ->paid()
+                             ->orderBy('nama_lengkap')
+                             ->get();
 
-        // Filter by kategori
-        if ($request->kategori) {
-            switch ($request->kategori) {
-                case 'kumite_perorangan':
-                    $query->where('kumite_perorangan', true);
-                    break;
-                case 'kata_perorangan':
-                    $query->where('kata_perorangan', true);
-                    break;
-                case 'kata_beregu':
-                    $query->where('kata_beregu', true);
-                    break;
-                case 'kumite_beregu':
-                    $query->where('kumite_beregu', true);
-                    break;
-            }
+            $pdf = Pdf::loadView('admin.exports.daftar-hadir', compact('peserta'));
+            $pdf->setPaper('a4', 'portrait');
+
+            return $pdf->download('daftar_hadir_' . date('Y-m-d') . '.pdf');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh daftar hadir: ' . $e->getMessage()]);
         }
+    }
 
-        // Filter by ranting
-        if ($request->ranting_id) {
-            $query->where('ranting_id', $request->ranting_id);
+    public function pembayaranDetail($id)
+    {
+        try {
+            $pembayaran = Pembayaran::with(['peserta.ranting', 'peserta.kategoriUsia', 'verifiedBy'])
+                                   ->findOrFail($id);
+
+            $pdf = Pdf::loadView('admin.exports.pembayaran-detail', compact('pembayaran'));
+            $pdf->setPaper('a4', 'portrait');
+
+            $filename = "Detail_Pembayaran_{$pembayaran->kode_pembayaran}_{$pembayaran->peserta->kode_pendaftaran}.pdf";
+
+            return $pdf->download($filename);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengunduh detail pembayaran: ' . $e->getMessage()]);
         }
-
-        $peserta = $query->orderBy('nama_lengkap')->get();
-
-        $pdf = PDF::loadView('exports.daftar-hadir', compact('peserta', 'request'));
-
-        $filename = 'Daftar_Hadir_' . ($request->kategori ?? 'Semua') . '_' . date('Y-m-d') . '.pdf';
-
-        return $pdf->download($filename);
     }
 }
