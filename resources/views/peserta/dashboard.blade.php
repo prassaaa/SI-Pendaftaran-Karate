@@ -327,56 +327,95 @@
                     @endif
 
                     <!-- Payment Actions -->
-                    @if($peserta->status_bayar === 'unpaid')
-                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                            </svg>
-                            <p class="text-red-700 text-sm font-medium">
-                                Silakan lakukan pembayaran untuk menyelesaikan pendaftaran
-                            </p>
+                    @if($peserta->status_pendaftaran !== 'approved')
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-amber-700 text-sm font-medium">
+                                        @if($peserta->status_pendaftaran === 'pending')
+                                            Pendaftaran Anda sedang dalam proses verifikasi oleh admin
+                                        @elseif($peserta->status_pendaftaran === 'rejected')
+                                            Pendaftaran Anda ditolak. Silakan hubungi admin untuk informasi lebih lanjut
+                                        @else
+                                            Pendaftaran belum diverifikasi
+                                        @endif
+                                    </p>
+                                    <p class="text-amber-600 text-xs mt-1">Pembayaran hanya dapat dilakukan setelah pendaftaran disetujui</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <button onclick="showPaymentModal()" class="group w-full flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 border border-blue-100">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        <div class="group w-full flex items-center p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200 opacity-60 cursor-not-allowed">
+                            <div class="w-12 h-12 bg-gradient-to-br from-gray-400 to-slate-400 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <div class="ml-4 flex-1 text-left">
+                                <div class="font-semibold text-gray-500">Upload Bukti Pembayaran</div>
+                                <div class="text-sm text-gray-400">Menunggu verifikasi pendaftaran</div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                         </div>
-                        <div class="ml-4 flex-1 text-left">
-                            <div class="font-semibold text-gray-900">Upload Bukti Pembayaran</div>
-                            <div class="text-sm text-blue-600 font-medium">Lengkapi pembayaran sekarang</div>
+
+                    @elseif($peserta->status_bayar === 'unpaid')
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                                <div>
+                                    <p class="text-red-700 text-sm font-medium">
+                                        Pendaftaran Anda telah disetujui!
+                                    </p>
+                                    <p class="text-red-600 text-xs mt-1">Silakan lakukan pembayaran untuk menyelesaikan pendaftaran</p>
+                                </div>
+                            </div>
                         </div>
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
+
+                        <button onclick="showPaymentModal()" class="group w-full flex items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 border border-blue-100">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                            </div>
+                            <div class="ml-4 flex-1 text-left">
+                                <div class="font-semibold text-gray-900">Upload Bukti Pembayaran</div>
+                                <div class="text-sm text-blue-600 font-medium">Lengkapi pembayaran sekarang</div>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
 
                     @elseif($peserta->status_bayar === 'pending')
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <p class="text-yellow-700 text-sm font-medium">
-                                Pembayaran Anda sedang diverifikasi oleh admin
-                            </p>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-yellow-700 text-sm font-medium">
+                                    Pembayaran Anda sedang diverifikasi oleh admin
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
                     @else
-                    <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <p class="text-green-700 text-sm font-medium">
-                                Pembayaran telah lunas. Pendaftaran Anda selesai!
-                            </p>
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-green-700 text-sm font-medium">
+                                    Pembayaran telah lunas. Pendaftaran Anda selesai!
+                                </p>
+                            </div>
                         </div>
-                    </div>
                     @endif
 
                     <!-- Download Actions -->
