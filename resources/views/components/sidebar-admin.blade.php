@@ -230,6 +230,17 @@
                     </div>
                 </div>
 
+                <!-- Clustering -->
+                <a href="{{ route('admin.clustering') }}"
+                   class="group flex items-center p-3 text-sm font-medium rounded-xl transition-all duration-200 {{ request()->routeIs('admin.clustering') ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/25' : 'text-gray-700 hover:bg-gray-50 hover:shadow-md' }}">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('admin.clustering') ? 'bg-white/20' : 'bg-orange-50 group-hover:bg-orange-100' }}">
+                        <svg class="w-5 h-5 {{ request()->routeIs('admin.clustering') ? 'text-white' : 'text-orange-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <span class="font-semibold">Clustering Umur</span>
+                </a>
+
                 <!-- Divider -->
                 <div class="border-t border-gray-200 my-6"></div>
 
@@ -404,6 +415,17 @@
                             </svg>
                         </div>
                         Laporan & Statistik
+                    </a>
+
+                    <a href="{{ route('admin.clustering') }}"
+                       @click="mobileOpen = false"
+                       class="flex items-center p-4 text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-4 bg-orange-50">
+                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        Clustering Umur
                     </a>
 
                     <a href="{{ route('admin.master.settings') }}"

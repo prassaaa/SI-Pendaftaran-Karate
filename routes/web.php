@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PesertaController as AdminPesertaController;
 use App\Http\Controllers\Admin\VerifikasiController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\MasterDataController;
+use App\Http\Controllers\Admin\ClusteringController;
 use App\Http\Controllers\Peserta\DashboardController as PesertaDashboardController;
 use App\Http\Controllers\Peserta\ProfileController as PesertaProfileController;
 use Illuminate\Support\Facades\Route;
@@ -138,6 +139,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/sertifikat/{id}', [ExportController::class, 'sertifikatPeserta'])->name('sertifikat');
         Route::get('/pembayaran-detail/{id}', [ExportController::class, 'pembayaranDetail'])->name('pembayaran.detail');
     });
+
+    // Clustering Routes
+    Route::get('/clustering', [ClusteringController::class, 'index'])->name('clustering');
+    Route::get('/clustering/data', [ClusteringController::class, 'getClusteringData'])->name('clustering.data');
+    Route::get('/clustering/export', [ClusteringController::class, 'export'])->name('clustering.export');
 });
 
 // Peserta Routes

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             RantingSeeder::class,
             BiayaKategoriSeeder::class,
             SettingSeeder::class,
+            DummyUserSeeder::class,
         ]);
     }
 }
