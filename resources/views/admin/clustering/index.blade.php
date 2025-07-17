@@ -52,7 +52,7 @@
     </div>
 
     <!-- Statistics Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
                 <div class="p-3 bg-blue-100 rounded-lg">
@@ -77,6 +77,20 @@
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Rata-rata Umur</p>
                     <p class="text-2xl font-bold text-gray-900">{{ $statistics['avg_age'] }} tahun</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l-3-3m3 3l3-3"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Rata-rata Berat</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $statistics['avg_weight'] }} kg</p>
                 </div>
             </div>
         </div>
@@ -110,7 +124,7 @@
         </div>
     </div>
 
-    <!-- Clustering Results -->
+    <!-- Clustering Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Cluster Chart -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -120,26 +134,37 @@
             </div>
         </div>
 
-        <!-- Cluster Summary -->
+        <!-- Scatter Plot Clustering -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Cluster</h3>
-            <div class="space-y-4">
-                @foreach($clusteringData['clusters'] as $name => $cluster)
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div class="flex items-center">
-                        <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ $cluster['color'] }}"></div>
-                        <div>
-                            <p class="font-medium text-gray-900">{{ $name }}</p>
-                            <p class="text-sm text-gray-600">{{ $cluster['min'] }}-{{ $cluster['max'] }} tahun</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-gray-900">{{ $cluster['count'] }} peserta</p>
-                        <p class="text-sm text-gray-600">{{ $cluster['percentage'] }}%</p>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Scatter Plot Clustering</h3>
+            <div class="relative">
+                <canvas id="scatterChart" width="400" height="300"></canvas>
+            </div>
+            <div class="mt-2 text-xs text-gray-500 text-center">
+                Sumbu X: Umur (tahun) | Sumbu Y: Berat Badan (kg)
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster Summary -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Cluster</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            @foreach($clusteringData['clusters'] as $name => $cluster)
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center">
+                    <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ $cluster['color'] }}"></div>
+                    <div>
+                        <p class="font-medium text-gray-900">{{ $name }}</p>
+                        <p class="text-sm text-gray-600">{{ $cluster['min'] }}-{{ $cluster['max'] }} tahun</p>
                     </div>
                 </div>
-                @endforeach
+                <div class="text-right">
+                    <p class="font-bold text-gray-900">{{ $cluster['count'] }} peserta</p>
+                    <p class="text-sm text-gray-600">{{ $cluster['percentage'] }}%</p>
+                </div>
             </div>
+            @endforeach
         </div>
     </div>
 
@@ -220,11 +245,12 @@
 <script>
 // Chart data
 const clusterData = @json($clusteringData['clusters']);
+const pesertaData = @json($peserta);
 const labels = Object.keys(clusterData);
 const data = labels.map(label => clusterData[label].count);
 const colors = labels.map(label => clusterData[label].color);
 
-// Create chart
+// Create doughnut chart
 const ctx = document.getElementById('clusterChart').getContext('2d');
 const clusterChart = new Chart(ctx, {
     type: 'doughnut',
@@ -259,6 +285,123 @@ const clusterChart = new Chart(ctx, {
                     }
                 }
             }
+        }
+    }
+});
+
+// Prepare scatter plot data
+function prepareScatterData() {
+    const scatterDatasets = [];
+
+    Object.keys(clusterData).forEach(clusterName => {
+        const cluster = clusterData[clusterName];
+        const scatterPoints = [];
+
+        cluster.peserta.forEach(peserta => {
+            scatterPoints.push({
+                x: peserta.umur_calculated,
+                y: parseFloat(peserta.berat_badan),
+                peserta: peserta
+            });
+        });
+
+        scatterDatasets.push({
+            label: clusterName,
+            data: scatterPoints,
+            backgroundColor: cluster.color,
+            borderColor: cluster.color,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            showLine: false
+        });
+    });
+
+    return scatterDatasets;
+}
+
+// Create scatter plot
+const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+const scatterChart = new Chart(scatterCtx, {
+    type: 'scatter',
+    data: {
+        datasets: prepareScatterData()
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                type: 'linear',
+                position: 'bottom',
+                title: {
+                    display: true,
+                    text: 'Umur (tahun)',
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    }
+                },
+                grid: {
+                    display: true,
+                    color: 'rgba(0, 0, 0, 0.1)'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Berat Badan (kg)',
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    }
+                },
+                grid: {
+                    display: true,
+                    color: 'rgba(0, 0, 0, 0.1)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    usePointStyle: true,
+                    font: {
+                        size: 11
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    title: function(context) {
+                        return 'Detail Peserta';
+                    },
+                    label: function(context) {
+                        const point = context.raw;
+                        const peserta = point.peserta;
+                        return [
+                            `Nama: ${peserta.nama_lengkap}`,
+                            `Cluster: ${context.dataset.label}`,
+                            `Umur: ${point.x} tahun`,
+                            `Berat: ${point.y} kg`,
+                            `Ranting: ${peserta.ranting.nama_ranting}`,
+                            `Jenis Kelamin: ${peserta.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}`
+                        ];
+                    }
+                },
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1,
+                cornerRadius: 6,
+                displayColors: false
+            }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'point'
         }
     }
 });

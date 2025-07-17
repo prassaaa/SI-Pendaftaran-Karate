@@ -17,9 +17,11 @@ class ClusteringController extends Controller
      */
     public function index(Request $request)
     {
-        // Get all peserta with their age
+        // Get all peserta with their age and weight data
         $peserta = Peserta::with(['ranting', 'kategoriUsia'])
             ->where('status_pendaftaran', 'approved')
+            ->whereNotNull('berat_badan')
+            ->where('berat_badan', '>', 0)
             ->get()
             ->map(function ($p) {
                 $p->umur_calculated = Carbon::parse($p->tanggal_lahir)->age;
@@ -127,11 +129,17 @@ class ClusteringController extends Controller
             }
         }
 
+        // Weight statistics
+        $weights = $peserta->pluck('berat_badan');
+
         return [
             'total_peserta' => $peserta->count(),
             'avg_age' => round($ages->avg(), 1),
             'min_age' => $ages->min(),
             'max_age' => $ages->max(),
+            'avg_weight' => $weights->count() > 0 ? round($weights->avg(), 1) : 0,
+            'min_weight' => $weights->count() > 0 ? $weights->min() : 0,
+            'max_weight' => $weights->count() > 0 ? $weights->max() : 0,
             'age_distribution' => $ageDistribution
         ];
     }
@@ -146,6 +154,8 @@ class ClusteringController extends Controller
         // Get clustering data
         $peserta = Peserta::with(['ranting', 'kategoriUsia'])
             ->where('status_pendaftaran', 'approved')
+            ->whereNotNull('berat_badan')
+            ->where('berat_badan', '>', 0)
             ->get()
             ->map(function ($p) {
                 $p->umur_calculated = Carbon::parse($p->tanggal_lahir)->age;
@@ -217,6 +227,8 @@ class ClusteringController extends Controller
     {
         $peserta = Peserta::with(['ranting', 'kategoriUsia'])
             ->where('status_pendaftaran', 'approved')
+            ->whereNotNull('berat_badan')
+            ->where('berat_badan', '>', 0)
             ->get()
             ->map(function ($p) {
                 $p->umur_calculated = Carbon::parse($p->tanggal_lahir)->age;
@@ -228,7 +240,8 @@ class ClusteringController extends Controller
 
         return response()->json([
             'clustering' => $clusteringData,
-            'statistics' => $statistics
+            'statistics' => $statistics,
+            'peserta' => $peserta
         ]);
     }
 }
