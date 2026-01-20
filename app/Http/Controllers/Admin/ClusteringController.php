@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ClusteringExport;
+use App\Exports\ClusteringBeratExport;
 use PDF;
 
 class ClusteringController extends Controller
@@ -424,7 +425,7 @@ class ClusteringController extends Controller
 
             $filename = 'clustering_berat_peserta_' . date('Y-m-d_H-i-s') . '.xlsx';
 
-            return Excel::download(new \App\Exports\ClusteringBeratExport($clusteringData, $statistics), $filename);
+            return Excel::download(new ClusteringBeratExport($clusteringData, $statistics), $filename);
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Gagal mengexport ke Excel: ' . $e->getMessage()]);

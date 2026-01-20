@@ -272,3 +272,4 @@ class ClusterBeratDetailSheet implements FromCollection, WithHeadings, WithMappi
         return $this->clusterName;
     }
 }
+
