@@ -144,6 +144,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/clustering', [ClusteringController::class, 'index'])->name('clustering');
     Route::get('/clustering/data', [ClusteringController::class, 'getClusteringData'])->name('clustering.data');
     Route::get('/clustering/export', [ClusteringController::class, 'export'])->name('clustering.export');
+
+    // Clustering Berat (Weight) Routes
+    Route::get('/clustering-berat', [ClusteringController::class, 'indexBerat'])->name('clustering-berat');
+    Route::get('/clustering-berat/data', [ClusteringController::class, 'getClusteringBeratData'])->name('clustering-berat.data');
+    Route::get('/clustering-berat/export', [ClusteringController::class, 'exportBerat'])->name('clustering-berat.export');
 });
 
 // Peserta Routes
